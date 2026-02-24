@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포켓몬 체육관 관장 성격 테스트</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS (Play CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion -->
+    <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        'bg-dark': '#121212',
+                        'card-dark': '#1E1E1E',
+                        'text-primary': '#E0E0E0',
+                        'text-secondary': '#BDBDBD',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #E0E0E0;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        .selection-indigo selection {
+            background-color: rgba(49, 46, 129, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+        const { motion, AnimatePresence } = window.Motion;
+        const { 
+            Trophy, ChevronRight, RotateCcw, Share2, Check, Zap, Leaf, Droplets, 
+            Flame, Shield, Wind, Sparkles, Skull, Mountain, Bug, Ghost, Gem, 
+            Moon, Sword, Snowflake, Brain, Circle 
+        } = LucideReact;
+
+        // --- Data Section ---
+        const TYPE_RESULTS = {
+            불꽃: {
+                type: "불꽃",
+                group: "에너지",
+                title: "타오르는 열정의 화신, 불꽃 타입 관장",
+                description: "당신은 누구보다 뜨거운 열정을 가진 리더입니다. 도전을 두려워하지 않고 정면으로 승부하는 모습이 많은 트레이너들에게 영감을 줍니다. 당신의 체육관은 항상 활기차고 뜨거운 열기로 가득 차 있겠군요!",
+                partner: "전기",
+                rival: "물",
+                color: "#D35D47",
+                bgGradient: "from-orange-900/50 to-red-900/50",
+            },
+            물: {
+                type: "물",
+                group: "자연",
+                title: "고요하고 깊은 통찰력, 물 타입 관장",
+                description: "당신은 유연하면서도 강인한 내면을 가졌습니다. 상황에 따라 형태를 바꾸는 물처럼 어떤 위기에도 침착하게 대응하며, 상대의 전략을 부드럽게 받아쳐 승리하는 지략가 타입입니다.",
+                partner: "얼음",
+                rival: "전기",
+                color: "#5D8AA8",
+                bgGradient: "from-blue-900/50 to-cyan-900/50",
+            },
+            풀: {
+                type: "풀",
+                group: "자연",
+                title: "부드러운 포용력의 수호자, 풀 타입 관장",
+                description: "당신은 주변 사람들을 편안하게 만드는 따뜻한 성품을 가졌습니다. 서두르지 않고 차근차근 성장하는 것을 즐기며, 자연과 조화를 이루는 당신의 배틀 스타일은 끈질기면서도 아름답습니다.",
+                partner: "벌레",
+                rival: "불꽃",
+                color: "#6B8E23",
+                bgGradient: "from-green-900/50 to-emerald-900/50",
+            },
+            전기: {
+                type: "전기",
+                group: "에너지",
+                title: "짜릿한 속도의 혁신가, 전기 타입 관장",
+                description: "당신은 번뜩이는 아이디어와 빠른 실행력을 가진 사람입니다. 지루한 것을 싫어하며 항상 새로운 자극을 찾아 나섭니다. 당신의 체육관은 최첨단 기술과 에너지가 넘치는 공간이 될 것입니다.",
+                partner: "강철",
+                rival: "땅",
+                color: "#C5B358",
+                bgGradient: "from-yellow-900/50 to-amber-900/50",
+            },
+            얼음: {
+                type: "얼음",
+                group: "신념",
+                title: "흔들림 없는 냉철한 의지, 얼음 타입 관장",
+                description: "당신은 어떤 상황에서도 평정심을 유지하는 강한 정신력을 가졌습니다. 겉으로는 차가워 보일 수 있지만, 사실은 누구보다 확고한 자신만의 기준과 신념을 지키며 묵묵히 길을 걷는 사람입니다.",
+                partner: "물",
+                rival: "격투",
+                color: "#87CEEB",
+                bgGradient: "from-cyan-900/50 to-blue-900/50",
+            },
+            격투: {
+                type: "격투",
+                group: "에너지",
+                title: "정정당당한 승부사, 격투 타입 관장",
+                description: "당신은 정직과 노력을 최고의 가치로 여깁니다. 편법을 쓰지 않고 오직 실력으로 승부하며, 끊임없는 자기계발을 통해 한계를 극복하는 모습은 모든 이들의 귀감이 됩니다.",
+                partner: "바위",
+                rival: "에스퍼",
+                color: "#A0522D",
+                bgGradient: "from-red-950 to-orange-950",
+            },
+            독: {
+                type: "독",
+                group: "신념",
+                title: "치밀한 전략의 설계자, 독 타입 관장",
+                description: "당신은 관찰력이 뛰어나고 분석적인 사고를 즐깁니다. 상대의 약점을 정확히 파악하여 서서히 승기를 굳히는 당신의 방식은 매우 치밀하며, 한 번 정한 목표는 반드시 달성하고 마는 집념이 있습니다.",
+                partner: "악",
+                rival: "땅",
+                color: "#8B4789",
+                bgGradient: "from-purple-900/50 to-fuchsia-950",
+            },
+            땅: {
+                type: "땅",
+                group: "자연",
+                title: "굳건한 신뢰의 대지, 땅 타입 관장",
+                description: "당신은 매우 현실적이고 듬직한 사람입니다. 화려함보다는 실속을 중시하며, 한 번 맺은 인연을 소중히 여깁니다. 당신이 지키는 체육관은 그 무엇보다 단단하고 안정적인 요새와 같습니다.",
+                partner: "바위",
+                rival: "물",
+                color: "#8B7355",
+                bgGradient: "from-yellow-950 to-amber-950",
+            },
+            비행: {
+                type: "비행",
+                group: "자유",
+                title: "자유를 꿈꾸는 모험가, 비행 타입 관장",
+                description: "당신은 구속받는 것을 싫어하며 넓은 세상을 향한 호기심이 가득합니다. 긍정적인 에너지로 주변을 밝게 만들며, 탁 트인 시야로 문제를 해결하는 유연한 사고방식을 가졌습니다.",
+                partner: "전기",
+                rival: "바위",
+                color: "#778899",
+                bgGradient: "from-indigo-900/50 to-blue-900/50",
+            },
+            에스퍼: {
+                type: "에스퍼",
+                group: "신비",
+                title: "번뜩이는 전략의 천재, 에스퍼 타입 관장",
+                description: "당신은 지적 호기심이 강하고 직관력이 매우 뛰어납니다. 남들이 보지 못하는 이면을 꿰뚫어 보며, 복잡한 문제도 자신만의 독특한 논리로 풀어내는 신비로운 매력을 가진 리더입니다.",
+                partner: "페어리",
+                rival: "악",
+                color: "#C71585",
+                bgGradient: "from-pink-900/50 to-purple-900/50",
+            },
+            벌레: {
+                type: "벌레",
+                group: "자유",
+                title: "작은 변화를 만드는 노력가, 벌레 타입 관장",
+                description: "당신은 소박하지만 확실한 행복을 소중히 여깁니다. 작은 것들의 소중함을 알며, 꾸준한 노력으로 큰 변화를 만들어내는 저력이 있습니다. 당신의 친근함은 많은 이들에게 편안함을 줍니다.",
+                partner: "풀",
+                rival: "불꽃",
+                color: "#6B8E23",
+                bgGradient: "from-lime-900/50 to-green-900/50",
+            },
+            바위: {
+                type: "바위",
+                group: "자연",
+                title: "변치 않는 의리의 수호자, 바위 타입 관장",
+                description: "당신은 매우 성실하고 책임감이 강합니다. 어떤 고난이 닥쳐도 굴하지 않고 자리를 지키는 당신의 모습은 주변 사람들에게 큰 신뢰를 줍니다. 전통과 원칙을 소중히 여기는 보수적인 면모도 매력적입니다.",
+                partner: "땅",
+                rival: "격투",
+                color: "#8B864E",
+                bgGradient: "from-stone-900/50 to-yellow-950",
+            },
+            고스트: {
+                type: "고스트",
+                group: "신비",
+                title: "베일에 싸인 미스터리, 고스트 타입 관장",
+                description: "당신은 독특한 개성과 예술적인 감각을 가졌습니다. 남들과는 다른 시각으로 세상을 바라보며, 때로는 엉뚱하지만 깊이 있는 생각으로 사람들을 놀라게 합니다. 당신의 존재 자체가 하나의 수수께끼 같군요.",
+                partner: "악",
+                rival: "악",
+                color: "#483D8B",
+                bgGradient: "from-slate-900 to-indigo-950",
+            },
+            드래곤: {
+                type: "드래곤",
+                group: "에너지",
+                title: "압도적인 카리스마의 정점, 드래곤 타입 관장",
+                description: "당신은 타고난 리더십과 강력한 존재감을 가졌습니다. 높은 목표를 향해 거침없이 나아가며, 당신의 자신감 넘치는 태도는 자연스럽게 사람들을 따르게 만듭니다. 최강을 지향하는 당신에게 어울리는 타입입니다.",
+                partner: "불꽃",
+                rival: "페어리",
+                color: "#4B0082",
+                bgGradient: "from-violet-950 to-blue-950",
+            },
+            악: {
+                type: "악",
+                group: "신비",
+                title: "냉철한 현실주의 지략가, 악 타입 관장",
+                description: "당신은 매우 독립적이고 실용적인 사고를 합니다. 고정관념에 얽매이지 않고 목적을 위해 가장 효율적인 방법을 찾아내며, 때로는 차가워 보이지만 사실은 누구보다 동료를 아끼는 츤데레 같은 면이 있습니다.",
+                partner: "독",
+                rival: "격투",
+                color: "#2F4F4F",
+                bgGradient: "from-neutral-900 to-stone-950",
+            },
+            강철: {
+                type: "강철",
+                group: "신념",
+                title: "완벽을 추구하는 철학자, 강철 타입 관장",
+                description: "당신은 매우 정교하고 체계적인 사람입니다. 흐트러짐 없는 일상을 선호하며, 모든 일을 완벽하게 처리하려는 경향이 있습니다. 당신의 단단한 내면은 그 어떤 공격에도 상처받지 않을 것 같네요.",
+                partner: "전기",
+                rival: "불꽃",
+                color: "#708090",
+                bgGradient: "from-gray-800 to-slate-900",
+            },
+            페어리: {
+                type: "페어리",
+                group: "신비",
+                title: "꿈과 희망의 몽상가, 페어리 타입 관장",
+                description: "당신은 상상력이 풍부하고 감수성이 예민합니다. 세상을 아름답게 보려는 긍정적인 마음씨를 가졌으며, 당신의 다정함은 지친 이들의 마음을 치유해주는 마법 같은 힘이 있습니다.",
+                partner: "에스퍼",
+                rival: "독",
+                color: "#DB7093",
+                bgGradient: "from-pink-900/50 to-rose-950",
+            },
+            노말: {
+                type: "노말",
+                group: "자유",
+                title: "무한한 가능성의 소유자, 노말 타입 관장",
+                description: "당신은 어디에나 잘 어울리며 어떤 상황에도 적응할 수 있는 놀라운 유연성을 가졌습니다. 특별한 형식이 없기에 오히려 무엇이든 될 수 있는 당신은, 기본에 충실하면서도 가장 강력한 잠재력을 지니고 있습니다.",
+                partner: "비행",
+                rival: "격투",
+                color: "#808069",
+                bgGradient: "from-stone-800 to-neutral-900",
+            },
+        };
+
+        const QUESTIONS = [
+            {
+                id: 1,
+                text: "새로운 지방으로 모험을 떠나게 되었습니다. 당신이 가장 먼저 챙길 것은?",
+                options: [
+                    { text: "지방의 지형과 포켓몬 분포가 적힌 상세한 지도", keyword: "질서/계획", scores: { 강철: 2, 땅: 1, 독: 1, 바위: 1 } },
+                    { text: "어떤 상황에서도 대처할 수 있는 넉넉한 회복 아이템", keyword: "자유/준비", scores: { 노말: 2, 풀: 1, 물: 1, 벌레: 1 } },
+                ],
+            },
+            {
+                id: 2,
+                text: "숲속에서 길을 잃은 어린 포켓몬을 발견했습니다. 당신의 행동은?",
+                options: [
+                    { text: "포켓몬의 기분을 살피며 안심시키고 부모를 찾아준다", keyword: "감성/공감", scores: { 페어리: 2, 풀: 1, 물: 1, 에스퍼: 1 } },
+                    { text: "주변 흔적을 분석하여 가장 효율적인 귀가 경로를 찾는다", keyword: "이성/분석", scores: { 에스퍼: 2, 독: 1, 강철: 1, 악: 1 } },
+                ],
+            },
+            {
+                id: 3,
+                text: "체육관 관장으로서 당신이 가장 중요하게 생각하는 가치는?",
+                options: [
+                    { text: "도전자와 뜨겁게 교감하며 한계를 시험하는 열정", keyword: "외향/열정", scores: { 불꽃: 2, 전기: 2, 격투: 2, 드래곤: 1 } },
+                    { text: "조용히 실력을 연마하며 완벽한 승부를 준비하는 인내", keyword: "내향/신중", scores: { 얼음: 2, 고스트: 2, 바위: 1, 땅: 1 } },
+                ],
+            },
+            {
+                id: 4,
+                text: "라이벌과의 중요한 시합 직전, 당신의 마음가짐은?",
+                options: [
+                    { text: "내 포켓몬들과 쌓아온 유대감을 믿고 정면 돌파한다!", keyword: "에너지/직관", scores: { 격투: 2, 불꽃: 1, 드래곤: 2, 비행: 1 } },
+                    { text: "상대의 약점을 찌를 수 있는 치밀한 교체 전략을 세운다.", keyword: "신념/전략", scores: { 독: 2, 악: 2, 강철: 1, 에스퍼: 1 } },
+                ],
+            },
+            {
+                id: 5,
+                text: "휴일에 당신이 가장 가고 싶은 장소는?",
+                options: [
+                    { text: "활기찬 축제가 열리는 대도시의 광장", keyword: "외향/활기", scores: { 전기: 2, 불꽃: 1, 노말: 1, 비행: 1 } },
+                    { text: "신비로운 전설이 잠들어 있는 조용한 고대 유적", keyword: "내향/신비", scores: { 고스트: 2, 에스퍼: 1, 바위: 1, 드래곤: 1 } },
+                ],
+            },
+            {
+                id: 6,
+                text: "포켓몬이 배틀 중 실수를 했습니다. 당신의 반응은?",
+                options: [
+                    { text: "\"괜찮아, 다음 기회가 있어!\"라고 격려하며 기운을 북돋운다.", keyword: "감성/지지", scores: { 풀: 2, 페어리: 1, 물: 1, 벌레: 1 } },
+                    { text: "무엇이 잘못되었는지 즉시 파악하고 다음 지시를 내린다.", keyword: "이성/해결", scores: { 강철: 2, 얼음: 1, 독: 1, 땅: 1 } },
+                ],
+            },
+            {
+                id: 7,
+                text: "당신이 선호하는 배틀 환경은?",
+                options: [
+                    { text: "날씨나 지형지물을 적극적으로 활용하는 변칙적인 필드", keyword: "자유/유연", scores: { 물: 1, 땅: 1, 벌레: 2, 비행: 1 } },
+                    { text: "어떤 방해도 없는 정정당당한 평지 스타디움", keyword: "질서/원칙", scores: { 격투: 2, 노말: 1, 바위: 1, 강철: 1 } },
+                ],
+            },
+            {
+                id: 8,
+                text: "누군가 당신의 방식이 틀렸다고 비난한다면?",
+                options: [
+                    { text: "상대의 의견을 경청하고 타협점을 찾으려 노력한다.", keyword: "자연/조화", scores: { 풀: 2, 물: 1, 노말: 1, 페어리: 1 } },
+                    { text: "내 신념이 옳다는 것을 실력으로 증명해 보인다.", keyword: "신념/독립", scores: { 드래곤: 2, 악: 1, 얼음: 1, 불꽃: 1 } },
+                ],
+            },
+            {
+                id: 9,
+                text: "당신의 방 인테리어 스타일은?",
+                options: [
+                    { text: "좋아하는 물건들로 가득 찬 개성 넘치고 화려한 방", keyword: "에너지/표현", scores: { 전기: 1, 페어리: 2, 불꽃: 1, 고스트: 1 } },
+                    { text: "필요한 것만 딱 갖춰진 깔끔하고 정돈된 미니멀한 방", keyword: "신념/절제", scores: { 얼음: 2, 강철: 1, 땅: 1, 바위: 1 } },
+                ],
+            },
+            {
+                id: 10,
+                text: "모르는 사람이 곤경에 처해 있습니다. 당신은?",
+                options: [
+                    { text: "고민하지 않고 바로 달려가서 도움의 손길을 내민다.", keyword: "외향/행동", scores: { 격투: 1, 비행: 2, 전기: 1, 불꽃: 1 } },
+                    { text: "상황을 지켜보며 내가 도울 수 있는 최선의 방법을 고민한다.", keyword: "내향/관찰", scores: { 에스퍼: 1, 독: 2, 고스트: 1, 악: 1 } },
+                ],
+            },
+            {
+                id: 11,
+                text: "당신이 가장 좋아하는 시간대는?",
+                options: [
+                    { text: "모든 것이 활기차게 시작되는 눈부신 아침", keyword: "에너지/희망", scores: { 불꽃: 1, 풀: 1, 비행: 1, 전기: 1 } },
+                    { text: "고요하고 차분하게 하루를 정리하는 깊은 밤", keyword: "신비/사색", scores: { 고스트: 2, 악: 1, 에스퍼: 1, 얼음: 1 } },
+                ],
+            },
+            {
+                id: 12,
+                text: "마지막으로, 당신에게 '포켓몬'이란?",
+                options: [
+                    { text: "함께 성장하고 꿈을 이루어가는 최고의 파트너", keyword: "자연/유대", scores: { 노말: 1, 풀: 1, 물: 1, 드래곤: 1 } },
+                    { text: "서로의 한계를 시험하며 정점에 오르기 위한 동료", keyword: "에너지/경쟁", scores: { 격투: 1, 불꽃: 1, 강철: 1, 독: 1 } },
+                ],
+            },
+        ];
+
+        // --- Component Section ---
+        const TypeIcon = ({ type, size = 20, ...props }) => {
+            const iconProps = { size, ...props };
+            switch (type) {
+                case "불꽃": return <Flame {...iconProps} className="text-orange-500" />;
+                case "물": return <Droplets {...iconProps} className="text-blue-500" />;
+                case "풀": return <Leaf {...iconProps} className="text-green-500" />;
+                case "전기": return <Zap {...iconProps} className="text-yellow-400" />;
+                case "얼음": return <Snowflake {...iconProps} className="text-cyan-300" />;
+                case "격투": return <Sword {...iconProps} className="text-red-700" />;
+                case "독": return <Skull {...iconProps} className="text-purple-500" />;
+                case "땅": return <Mountain {...iconProps} className="text-amber-700" />;
+                case "비행": return <Wind {...iconProps} className="text-indigo-400" />;
+                case "에스퍼": return <Brain {...iconProps} className="text-pink-500" />;
+                case "벌레": return <Bug {...iconProps} className="text-lime-500" />;
+                case "바위": return <Gem {...iconProps} className="text-stone-500" />;
+                case "고스트": return <Ghost {...iconProps} className="text-indigo-800" />;
+                case "드래곤": return <Sparkles {...iconProps} className="text-violet-600" />;
+                case "악": return <Moon {...iconProps} className="text-neutral-800" />;
+                case "강철": return <Shield {...iconProps} className="text-slate-500" />;
+                case "페어리": return <Sparkles {...iconProps} className="text-rose-300" />;
+                case "노말": return <Circle {...iconProps} className="text-stone-400" />;
+                default: return null;
+            }
+        };
+
+        function App() {
+            const [step, setStep] = useState("intro");
+            const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+            const [scores, setScores] = useState({});
+            const [isCopied, setIsCopied] = useState(false);
+
+            const handleStart = () => {
+                setScores({});
+                setCurrentQuestionIndex(0);
+                setStep("quiz");
+                setIsCopied(false);
+            };
+
+            const result = useMemo(() => {
+                if (step !== "result") return TYPE_RESULTS["노말"];
+                let maxScore = -1;
+                let bestType = "노말";
+
+                Object.entries(scores).forEach(([type, score]) => {
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestType = type;
+                    }
+                });
+
+                return TYPE_RESULTS[bestType];
+            }, [scores, step]);
+
+            const handleShare = async () => {
+                const shareUrl = window.location.href;
+                const shareText = `나는 [${result.type} 타입] 관장이야! 너는 어떤 타입이야?\n지금 바로 테스트해보세요! ➡️ ${shareUrl}`;
+                
+                try {
+                    await navigator.clipboard.writeText(shareText);
+                    setIsCopied(true);
+                    alert("테스트 결과와 링크가 클립보드에 복사되었습니다!");
+                    setTimeout(() => setIsCopied(false), 2000);
+                } catch (err) {
+                    console.error("Failed to copy: ", err);
+                    alert("클립보드 복사에 실패했습니다.");
+                }
+            };
+
+            const handleAnswer = (optionScores) => {
+                const newScores = { ...scores };
+                Object.entries(optionScores).forEach(([type, score]) => {
+                    newScores[type] = (newScores[type] || 0) + (score || 0);
+                });
+                setScores(newScores);
+
+                if (currentQuestionIndex < QUESTIONS.length - 1) {
+                    setCurrentQuestionIndex(prev => prev + 1);
+                } else {
+                    setStep("result");
+                }
+            };
+
+            const progress = ((currentQuestionIndex + 1) / QUESTIONS.length) * 100;
+
+            return (
+                <div className="min-h-screen bg-bg-dark text-text-primary font-sans selection:bg-indigo-900/30">
+                    <div className="max-w-2xl mx-auto px-6 py-12 min-h-screen flex flex-col justify-center">
+                        
+                        <AnimatePresence mode="wait">
+                            {step === "intro" && (
+                                <motion.div
+                                    key="intro"
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -20 }}
+                                    className="text-center space-y-10"
+                                >
+                                    <div className="inline-block p-6 bg-card-dark rounded-[2.5rem] shadow-2xl border border-white/5 mb-4">
+                                        <Trophy size={80} className="text-yellow-600/80 mx-auto" />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h1 className="text-5xl md:text-6xl font-black tracking-tight leading-tight text-text-primary">
+                                            포켓몬 체육관 관장<br />
+                                            <span className="text-indigo-400/80">성격 테스트</span>
+                                        </h1>
+                                        <p className="text-xl text-text-secondary max-w-md mx-auto leading-relaxed">
+                                            당신의 가치관과 선택을 통해 18개 타입 중 당신에게 가장 어울리는 체육관 타입을 찾아드립니다.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={handleStart}
+                                        className="group relative inline-flex items-center justify-center px-10 py-5 font-bold text-white transition-all duration-300 bg-indigo-600/80 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500/50 hover:bg-indigo-500/90 active:scale-95 shadow-lg shadow-indigo-900/20"
+                                    >
+                                        테스트 시작하기
+                                        <ChevronRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                    
+                                    <div className="pt-16 grid grid-cols-6 gap-6 opacity-10 grayscale contrast-125">
+                                        {Object.keys(TYPE_RESULTS).slice(0, 6).map((t) => (
+                                            <TypeIcon key={t} type={t} size={28} />
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === "quiz" && (
+                                <motion.div
+                                    key="quiz"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-12"
+                                >
+                                    <div className="space-y-6">
+                                        <div className="flex justify-between items-end">
+                                            <span className="text-sm font-black text-indigo-400/80 tracking-[0.2em] uppercase">
+                                                Question {currentQuestionIndex + 1} / {QUESTIONS.length}
+                                            </span>
+                                            <span className="text-xs font-mono text-text-secondary/50">
+                                                {Math.round(progress)}%
+                                            </span>
+                                        </div>
+                                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                                            <motion.div 
+                                                className="h-full bg-indigo-500/60"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: `${progress}%` }}
+                                                transition={{ duration: 0.4, ease: "easeOut" }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h2 className="text-3xl md:text-4xl font-bold leading-tight text-text-primary">
+                                        {QUESTIONS[currentQuestionIndex].text}
+                                    </h2>
+
+                                    <div className="grid gap-5">
+                                        {QUESTIONS[currentQuestionIndex].options.map((option, idx) => (
+                                            <button
+                                                key={idx}
+                                                onClick={() => handleAnswer(option.scores)}
+                                                className="w-full text-left p-8 bg-card-dark border border-white/5 rounded-[2rem] hover:border-indigo-500/30 hover:bg-indigo-500/5 transition-all duration-300 group active:scale-[0.98] shadow-xl"
+                                            >
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <span className="text-xl font-medium text-text-primary group-hover:text-indigo-300 transition-colors leading-snug">
+                                                        {option.text}
+                                                    </span>
+                                                    <ChevronRight size={24} className="text-white/10 group-hover:text-indigo-400/50 group-hover:translate-x-1 transition-all shrink-0" />
+                                                </div>
+                                                <div className="mt-4 text-[11px] uppercase tracking-[0.2em] text-text-secondary/40 font-black">
+                                                    {option.keyword}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {step === "result" && (
+                                <motion.div
+                                    key="result"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="space-y-10"
+                                >
+                                    <div className={`p-[1px] bg-gradient-to-br ${result.bgGradient} rounded-[3rem] shadow-2xl shadow-black/50`}>
+                                        <div className="bg-card-dark rounded-[2.95rem] p-10 md:p-14 space-y-10">
+                                            <div className="text-center space-y-6">
+                                                <div className="inline-flex items-center justify-center w-24 h-24 rounded-[2rem] bg-white/5 border border-white/5 mb-2 shadow-inner">
+                                                    <TypeIcon type={result.type} size={48} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <p className="text-xs font-black tracking-[0.3em] text-text-secondary/40 uppercase">
+                                                        {result.group} 그룹 관장
+                                                    </p>
+                                                    <h2 className="text-4xl md:text-5xl font-black tracking-tight text-text-primary">
+                                                        {result.title}
+                                                    </h2>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white/5 rounded-[2rem] p-8 border border-white/5 shadow-inner">
+                                                <p className="text-xl leading-relaxed text-text-secondary italic font-medium">
+                                                    "{result.description}"
+                                                </p>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-6">
+                                                <div className="p-6 bg-indigo-500/5 rounded-[1.5rem] border border-indigo-500/10 space-y-3">
+                                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-indigo-400/60">환상의 파트너</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <TypeIcon type={result.partner} size={20} />
+                                                        <span className="font-bold text-lg text-text-primary">{result.partner} 타입</span>
+                                                    </div>
+                                                </div>
+                                                <div className="p-6 bg-rose-500/5 rounded-[1.5rem] border border-rose-500/10 space-y-3">
+                                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-rose-400/60">라이벌 타입</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <TypeIcon type={result.rival} size={20} />
+                                                        <span className="font-bold text-lg text-text-primary">{result.rival} 타입</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-5">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button
+                                                onClick={handleStart}
+                                                className="flex items-center justify-center gap-3 py-5 bg-white/10 text-text-primary rounded-full font-bold hover:bg-white/15 transition-all active:scale-95 border border-white/5 shadow-lg"
+                                            >
+                                                <RotateCcw size={20} />
+                                                다시하기
+                                            </button>
+                                            <button
+                                                onClick={handleShare}
+                                                className={`flex items-center justify-center gap-3 py-5 rounded-full font-bold transition-all active:scale-95 border shadow-lg ${
+                                                    isCopied 
+                                                        ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" 
+                                                        : "bg-indigo-600/80 text-white border-indigo-500/30 hover:bg-indigo-500/90"
+                                                }`}
+                                            >
+                                                {isCopied ? <Check size={20} /> : <Share2 size={20} />}
+                                                {isCopied ? "복사 완료!" : "링크 공유"}
+                                            </button>
+                                        </div>
+                                        <p className="text-center text-sm text-text-secondary/30 font-medium">
+                                            결과를 친구들에게 공유하고 최고의 체육관 관장이 누구인지 겨뤄보세요!
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
